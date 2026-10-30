@@ -1,0 +1,11 @@
+.ug{--side:min(66vw,44vh,340px);display:grid;grid-template-columns:48px var(--side);grid-template-rows:38px auto}
+.ug .cells{display:grid;gap:2px;grid-area:2/2}
+.ug .cells i{border-radius:3px;background:hsl(var(--h) 78% 58%);transform:scale(0);opacity:0;
+  transition:transform .4s cubic-bezier(.3,1.5,.5,1) var(--d),opacity .3s var(--d),background .3s}
+.ug .cells i.on{transform:scale(1);opacity:1}
+.ug .cells i.lit,.ug .cells i.accent{background:#f59e0b}
+.ug .mk{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800}
+.ug .mk b{opacity:.85}
+.ug .top{grid-area:1/2;border-bottom:3px solid currentColor;margin-bottom:6px;align-items:flex-start}
+.ug .left{grid-area:2/1;border-right:3px solid currentColor;margin-right:6px;padding-right:6px}
+.ug .top:empty,.ug .left:empty{border-color:transparent}
