@@ -1,0 +1,5 @@
+.cube3d{align-self:stretch;flex:1;position:relative;perspective:900px;touch-action:none}
+.cube3d .w{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;transition:transform 1s ease}
+.cube3d .f{position:absolute;display:grid;transform-style:preserve-3d;backface-visibility:hidden;transition:transform 1s ease}
+.cube3d .f>i{background:var(--btn);border:1px solid var(--bg);transition:background .45s,border-color .45s}
+.cube3d .f.on>i{background:var(--c);border-color:rgba(255,255,255,.55)}

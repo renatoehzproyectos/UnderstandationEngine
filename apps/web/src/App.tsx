@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { evaluate, parseSpec, useExperience, type Spec } from '@engine/core';
 import { UnitGrid } from '@engine/renderer-2d';
+import { CubeNet } from '@engine/renderer-3d';
 import { LIBRARY } from '@library/index';
 
 useExperience.getState().load(LIBRARY[0].spec);
@@ -12,7 +13,8 @@ export default function App() {
   const [ask, setAsk] = useState(false), [q, setQ] = useState(''), [st, setSt] = useState<'' | 'busy' | 'err' | 'no'>('');
   const s = spec!, B = s.timeline[beat], last = s.timeline.length - 1;
   const base = { ...vars, c: 0, r: 0, i: 0, k: 0 };
-  const cols = Number(evaluate(s.grid.cols, base)), rows = Number(evaluate(s.grid.rows, base)), total = cols * rows;
+  const cols = s.grid ? Number(evaluate(s.grid.cols, base)) : 0, rows = s.grid ? Number(evaluate(s.grid.rows, base)) : 0, total = cols * rows;
+  const num = (e: string | undefined, d: number) => (e ? Number(evaluate(e, base)) : d);
 
   const open = (sp: Spec) => { useExperience.getState().load(sp); setTimeout(() => useExperience.getState().play(), 500); };
   useEffect(() => { const t = setTimeout(() => useExperience.getState().play(), 700); return () => clearTimeout(t); }, []);
@@ -22,7 +24,7 @@ export default function App() {
     return () => clearTimeout(t);
   }, [playing, beat]);
   useEffect(() => {
-    if (!B.count) return;
+    if (!B.count || !total) return;
     setCnt(0);
     const step = Math.max(1, Math.round(total / ((B.ms * 0.7) / 30)));
     const id = setInterval(() => setCnt((c) => Math.min(total, c + step)), 30);
@@ -61,9 +63,13 @@ export default function App() {
         </div>
       )}
       <section className="stage">
-        <UnitGrid cols={cols} rows={rows} lit={B.count ? cnt : 0} accent={B.accent}
-          visible={(c, r, i) => Boolean(evaluate(B.tiles, { ...vars, c, r, i, k: 0 }))}
-          left={mark(B.marks.left)} top={mark(B.marks.top)} />
+        {s.solid ? (
+          <CubeNet side={num(s.solid.side, 3)} fold={num(B.fold, 1)} lit={num(B.lit, 0)} />
+        ) : (
+          <UnitGrid cols={cols} rows={rows} lit={B.count ? cnt : 0} accent={B.accent}
+            visible={(c, r, i) => Boolean(evaluate(B.tiles, { ...vars, c, r, i, k: 0 }))}
+            left={mark(B.marks.left)} top={mark(B.marks.top)} />
+        )}
       </section>
       <section className="say">
         {says.map((x, idx) => (

@@ -20,3 +20,9 @@ Una especificación es una línea de tiempo de *beats*: qué cuadritos se ven (`
 ## IA constructora (etapa 5, v0)
 `api/generate.ts` (Vercel) recibe `{concept}`, llama a la API de Groq con el prompt de `ai-builder/experience-generator`, valida el resultado con Zod + evaluador y lo devuelve al motor. Variable de entorno requerida: `GROQ_KEY` (opcional: `GROQ_MODEL`). En la app: ✨ → escribir un concepto → →.
 Límite actual: el motor solo tiene el módulo de cuadrícula de unidades; conceptos fuera de ese módulo devuelven `unsupported`.
+
+## Herramientas del modelo y verificación
+El modelo trabaja con herramientas: `example`, `calc`, `preview` (ve el ASCII de cada paso), `check`, `submit` (solo acepta lo verificado) y `cannot_represent`.
+`engine/core/src/verify.ts` comprueba, para todos los valores de las variables: que lo visible coincida con `shows`, que el conteo y las medidas marcadas sean exactos, que las `claims` sean verdaderas y que no haya palabras (solo símbolos).
+`npm run verify` valida toda la biblioteca (y corre antes de cada build).
+Escenas: `grid` (cuadritos) y `solid` (cubo 3D en CSS; Three.js llegará después).

@@ -1,17 +1,98 @@
 {
-  "id": "square-root",
-  "version": 1,
-  "vars": { "n": { "min": 2, "max": 12, "value": 8 } },
-  "grid": { "cols": "n", "rows": "n" },
-  "timeline": [
-    { "tiles": "c==0", "marks": { "left": "n" }, "say": "n", "ms": 2400 },
-    { "tiles": "c==0||r==0", "marks": { "left": "n", "top": "n" }, "say": "n", "ms": 2400 },
-    { "tiles": "true", "marks": { "left": "n", "top": "n" }, "say": "n+\"×\"+n", "ms": 2400 },
-    { "tiles": "true", "marks": { "left": "n", "top": "n" }, "say": "n+\"²\"", "ms": 2400 },
-    { "tiles": "true", "count": true, "say": "n*n", "ms": 3600 },
-    { "tiles": "true", "say": "\"√\"+n*n", "ms": 2600 },
-    { "tiles": "true", "marks": { "left": "n", "top": "n" }, "say": "n+\"×\"+n", "ms": 2400 },
-    { "tiles": "c==0||r==0", "marks": { "left": "n", "top": "n" }, "ms": 2400 },
-    { "tiles": "c==0", "marks": { "left": "n" }, "say": "n", "accent": true, "ms": 3000 }
-  ]
+ "id": "square-root",
+ "version": 1,
+ "vars": {
+  "n": {
+   "min": 2,
+   "max": 12,
+   "value": 8
+  }
+ },
+ "grid": {
+  "cols": "n",
+  "rows": "n"
+ },
+ "timeline": [
+  {
+   "tiles": "c==0",
+   "marks": {
+    "left": "n"
+   },
+   "say": "n",
+   "ms": 2400,
+   "shows": "n"
+  },
+  {
+   "tiles": "c==0||r==0",
+   "marks": {
+    "left": "n",
+    "top": "n"
+   },
+   "say": "n",
+   "ms": 2400,
+   "shows": "n+n-1"
+  },
+  {
+   "tiles": "true",
+   "marks": {
+    "left": "n",
+    "top": "n"
+   },
+   "say": "n+\"×\"+n",
+   "ms": 2400,
+   "shows": "n*n"
+  },
+  {
+   "tiles": "true",
+   "marks": {
+    "left": "n",
+    "top": "n"
+   },
+   "say": "n+\"²\"",
+   "ms": 2400,
+   "shows": "n*n"
+  },
+  {
+   "tiles": "true",
+   "count": true,
+   "say": "n*n",
+   "ms": 3600,
+   "shows": "n*n"
+  },
+  {
+   "tiles": "true",
+   "say": "\"√\"+n*n",
+   "ms": 2600,
+   "shows": "n*n"
+  },
+  {
+   "tiles": "true",
+   "marks": {
+    "left": "n",
+    "top": "n"
+   },
+   "say": "n+\"×\"+n",
+   "ms": 2400,
+   "shows": "n*n"
+  },
+  {
+   "tiles": "c==0||r==0",
+   "marks": {
+    "left": "n",
+    "top": "n"
+   },
+   "ms": 2400,
+   "shows": "n+n-1"
+  },
+  {
+   "tiles": "c==0",
+   "marks": {
+    "left": "n"
+   },
+   "say": "n",
+   "accent": true,
+   "ms": 3000,
+   "shows": "n"
+  }
+ ]
 }

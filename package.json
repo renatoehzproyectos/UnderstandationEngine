@@ -4,12 +4,24 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config apps/web/vite.config.ts",
-    "build": "tsc --noEmit && vite build --config apps/web/vite.config.ts",
-    "typecheck": "tsc --noEmit"
+    "build": "npm run verify && tsc --noEmit && vite build --config apps/web/vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "verify": "tsx ai-builder/validator/verify-library.ts"
   },
-  "dependencies": { "react": "^18.3.1", "react-dom": "^18.3.1", "zod": "^3.23.8", "zustand": "^4.5.5" },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.5"
+  },
   "devDependencies": {
-    "@types/react": "^18.3.3", "@types/react-dom": "^18.3.0", "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.5.4", "vite": "^5.4.2", "vite-plugin-singlefile": "^2.0.2"
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2",
+    "vite-plugin-singlefile": "^2.0.2",
+    "tsx": "^4.19.0",
+    "@types/node": "^20.14.0"
   }
 }

@@ -1,0 +1,75 @@
+{
+ "id": "cube-area",
+ "version": 1,
+ "vars": {
+  "n": {
+   "min": 1,
+   "max": 8,
+   "value": 3
+  }
+ },
+ "solid": {
+  "kind": "cube",
+  "side": "n"
+ },
+ "claims": [
+  "6*n*n==n*n+n*n+n*n+n*n+n*n+n*n"
+ ],
+ "timeline": [
+  {
+   "fold": "1",
+   "lit": "0",
+   "say": "n+\"²\"",
+   "ms": 2200
+  },
+  {
+   "fold": "0",
+   "lit": "0",
+   "say": "n*n",
+   "ms": 2200
+  },
+  {
+   "fold": "0",
+   "lit": "1",
+   "say": "n*n",
+   "ms": 2200
+  },
+  {
+   "fold": "0",
+   "lit": "2",
+   "say": "n*n+\"+\"+n*n",
+   "ms": 2200
+  },
+  {
+   "fold": "0",
+   "lit": "3",
+   "say": "\"3×\"+n*n",
+   "ms": 2200
+  },
+  {
+   "fold": "0",
+   "lit": "4",
+   "say": "\"4×\"+n*n",
+   "ms": 2200
+  },
+  {
+   "fold": "0",
+   "lit": "5",
+   "say": "\"5×\"+n*n",
+   "ms": 2200
+  },
+  {
+   "fold": "0",
+   "lit": "6",
+   "say": "\"6×\"+n*n",
+   "ms": 2200
+  },
+  {
+   "fold": "1",
+   "lit": "6",
+   "say": "6*n*n",
+   "ms": 2200,
+   "accent": true
+  }
+ ]
+}
