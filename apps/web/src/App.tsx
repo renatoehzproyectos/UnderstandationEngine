@@ -3,6 +3,7 @@ import { evaluate, parseSpec, useExperience, type Spec } from '@engine/core';
 import { UnitGrid } from '@engine/renderer-2d';
 import { CubeNet } from '@engine/renderer-3d';
 import { LIBRARY } from '@library/index';
+import { copyLog, log } from './log';
 
 useExperience.getState().load(LIBRARY[0].spec);
 
@@ -10,13 +11,15 @@ export default function App() {
   const { spec, vars, beat, playing, setVar, go, play, pause } = useExperience();
   const [cnt, setCnt] = useState(0);
   const [items, setItems] = useState(LIBRARY.map((e) => ({ glyph: e.glyph, spec: e.spec })));
-  const [ask, setAsk] = useState(false), [q, setQ] = useState(''), [st, setSt] = useState<'' | 'busy' | 'err' | 'no'>('');
+  const [cp, setCp] = useState<'' | 'ok' | 'err'>(''), [ask, setAsk] = useState(false), [q, setQ] = useState(''), [st, setSt] = useState<'' | 'busy' | 'err' | 'no'>('');
   const s = spec!, B = s.timeline[beat], last = s.timeline.length - 1;
   const base = { ...vars, c: 0, r: 0, i: 0, k: 0 };
   const cols = s.grid ? Number(evaluate(s.grid.cols, base)) : 0, rows = s.grid ? Number(evaluate(s.grid.rows, base)) : 0, total = cols * rows;
   const num = (e: string | undefined, d: number) => (e ? Number(evaluate(e, base)) : d);
 
-  const open = (sp: Spec) => { useExperience.getState().load(sp); setTimeout(() => useExperience.getState().play(), 500); };
+  const open = (sp: Spec) => {
+    log('open', `spec ${sp.id} vars=${JSON.stringify(Object.keys(sp.vars))}`); useExperience.getState().load(sp); setTimeout(() => useExperience.getState().play(), 500); };
+  useEffect(() => { log('beat', `${s.id} ${beat + 1}/${last + 1} vars=${JSON.stringify(vars)} playing=${playing}`); }, [beat, s.id, vars, playing]);
   useEffect(() => { const t = setTimeout(() => useExperience.getState().play(), 700); return () => clearTimeout(t); }, []);
   useEffect(() => {
     if (!playing) return;
@@ -31,16 +34,25 @@ export default function App() {
     return () => clearInterval(id);
   }, [beat, total]);
 
+  async function copy() {
+    const ok = await copyLog(); setCp(ok ? 'ok' : 'err'); setTimeout(() => setCp(''), 1800);
+  }
+
   async function generate() {
     if (!q.trim()) return;
-    setSt('busy');
+    setSt('busy'); log('gen', `request: "${q}"`);
     try {
       const r = await fetch('/api/generate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ concept: q }) });
-      if (r.status === 422 && (await r.json()).error?.includes('unsupported')) { setSt('no'); return; }
-      if (!r.ok) throw new Error();
-      const sp = parseSpec(await r.json());
+      const raw = await r.text(); let j: any = {};
+      try { j = JSON.parse(raw); } catch { /* respuesta no JSON */ }
+      log('gen', r.ok ? `HTTP ${r.status}` : `HTTP ${r.status} ${raw.slice(0, 600)}`);
+      (j.trace ?? []).forEach((t: string) => log('server', t));
+      if (r.status === 422 && String(j.error).includes('unsupported')) { log('gen', 'concept not representable'); setSt('no'); return; }
+      if (!r.ok) throw new Error(j.error ?? `HTTP ${r.status}`);
+      const sp = parseSpec(j.spec);
+      log('gen', `spec accepted: ${sp.id}\n${JSON.stringify(sp)}`);
       setItems((it) => [...it, { glyph: '★', spec: sp }]); open(sp); setSt(''); setAsk(false); setQ('');
-    } catch { setSt('err'); }
+    } catch (e) { log('error', `generate failed: ${String(e)}`); setSt('err'); }
   }
 
   const mark = (e?: string) => (e ? String(evaluate(e, base)) : undefined);
@@ -55,6 +67,7 @@ export default function App() {
           <button key={i} className={it.spec === s ? 'on' : ''} aria-label={it.glyph} onClick={() => open(it.spec)}>{it.glyph}</button>
         ))}
         <button aria-label="✨" onClick={() => setAsk(!ask)}>✨</button>
+        <button aria-label="📋" onClick={copy}>{cp === 'ok' ? '✓' : cp === 'err' ? '⚠' : '📋'}</button>
       </header>
       {ask && (
         <div className="ask">

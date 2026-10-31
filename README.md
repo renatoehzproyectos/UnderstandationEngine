@@ -26,3 +26,4 @@ El modelo trabaja con herramientas: `example`, `calc`, `preview` (ve el ASCII de
 `engine/core/src/verify.ts` comprueba, para todos los valores de las variables: que lo visible coincida con `shows`, que el conteo y las medidas marcadas sean exactos, que las `claims` sean verdaderas y que no haya palabras (solo símbolos).
 `npm run verify` valida toda la biblioteca (y corre antes de cada build).
 Escenas: `grid` (cuadritos) y `solid` (cubo 3D en CSS; Three.js llegará después).
+- Botón 📋: copia el log completo (consola, errores, eventos, estado, traza del servidor con modelos y herramientas usadas).

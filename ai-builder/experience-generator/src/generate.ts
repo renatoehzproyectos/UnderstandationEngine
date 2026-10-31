@@ -29,17 +29,19 @@ async function chat(key: string, model: string, messages: any[]) {
 }
 
 /** Bucle con herramientas: ejemplo → borrador → preview → check → submit (solo se acepta lo verificado). */
-async function agent(key: string, model: string, concept: string, deadline: number): Promise<Spec> {
+async function agent(key: string, model: string, concept: string, deadline: number, trace: string[]): Promise<Spec> {
   const messages: any[] = [{ role: 'system', content: SYSTEM }, { role: 'user', content: concept }];
   for (let step = 0; step < 12; step++) {
     if (Date.now() > deadline) throw new Error('timeout');
     const m = await chat(key, model, messages);
+    trace.push(`${model} step ${step}: ${m.tool_calls?.length ? m.tool_calls.map((t: any) => t.function.name).join(',') : 'plain text'}`);
     messages.push({ role: 'assistant', content: m.content ?? '', ...(m.tool_calls?.length ? { tool_calls: m.tool_calls } : {}) });
     if (m.tool_calls?.length) {
       for (const tc of m.tool_calls) {
         let args: any = {};
         try { args = JSON.parse(tc.function.arguments || '{}'); } catch { /* args vacíos */ }
         const r = runTool(tc.function.name, args);
+        trace.push(`  ${tc.function.name} → ${r.done ? 'ACCEPTED' : r.unsupported ? 'unsupported' : r.text.replace(/\s+/g, ' ').slice(0, 220)}`);
         if (r.unsupported) throw new Error('unsupported');
         if (r.done) return r.done;
         messages.push({ role: 'tool', tool_call_id: tc.id, content: r.text });
@@ -52,15 +54,16 @@ async function agent(key: string, model: string, concept: string, deadline: numb
   throw new Error('no accepted spec');
 }
 
-export async function generateSpec(concept: string, key: string, first?: string): Promise<Spec> {
+export async function generateSpec(concept: string, key: string, first?: string, trace: string[] = []): Promise<Spec> {
   const models = await listModels(key, first), log: string[] = [], t0 = Date.now();
   for (const model of models) {
     if (Date.now() - t0 > 40000) break;
-    try { return await agent(key, model, concept, Math.min(t0 + 55000, Date.now() + 28000)); }
+    try { return await agent(key, model, concept, Math.min(t0 + 55000, Date.now() + 28000), trace); }
     catch (e) {
       const m = String(e);
       if (m.includes('unsupported')) throw new Error('unsupported');
       log.push(`${model}: ${m.slice(0, 80)}`);
+      trace.push(`${model} FAILED: ${m.slice(0, 160)}`);
     }
   }
   throw new Error(`all models failed → ${log.join(' | ')}`);

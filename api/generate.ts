@@ -9,6 +9,7 @@ export default async function handler(req: any, res: any) {
   if (!key) return res.status(500).json({ error: 'GROQ_KEY missing' });
   const concept = String(req.body?.concept ?? '').slice(0, 200).trim();
   if (!concept) return res.status(400).json({ error: 'empty concept' });
-  try { res.status(200).json(await generateSpec(concept, key, process.env.GROQ_MODEL || undefined)); }
-  catch (e) { res.status(422).json({ error: String(e) }); }
+  const trace: string[] = [];
+  try { const spec = await generateSpec(concept, key, process.env.GROQ_MODEL || undefined, trace); res.status(200).json({ spec, trace }); }
+  catch (e) { res.status(422).json({ error: String(e), trace }); }
 }
