@@ -16,3 +16,7 @@ npm run build      # genera dist/index.html (archivo único)
 - Carpetas vacías (`.gitkeep`): reservadas para 3D, física, dominios, `ai-builder` y `backend`
 
 Una especificación es una línea de tiempo de *beats*: qué cuadritos se ven (`tiles`), qué medidas se marcan (`marks`), qué símbolo se muestra (`say`). Añadir un concepto nuevo = añadir un JSON, sin programar.
+
+## IA constructora (etapa 5, v0)
+`api/generate.ts` (Vercel) recibe `{concept}`, llama a la API de Groq con el prompt de `ai-builder/experience-generator`, valida el resultado con Zod + evaluador y lo devuelve al motor. Variable de entorno requerida: `GROQ_KEY` (opcional: `GROQ_MODEL`). En la app: ✨ → escribir un concepto → →.
+Límite actual: el motor solo tiene el módulo de cuadrícula de unidades; conceptos fuera de ese módulo devuelven `unsupported`.

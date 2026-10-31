@@ -1,3 +1,3 @@
-export * from './expr';
-export * from './spec';
-export * from './store';
+export * from './expr.js';
+export * from './spec.js';
+export * from './store.js';

@@ -1,0 +1,12 @@
+{
+  "id": "rectangle-area",
+  "version": 1,
+  "vars": { "n": { "min": 1, "max": 10, "value": 3 }, "m": { "min": 1, "max": 10, "value": 5 } },
+  "grid": { "cols": "m", "rows": "n" },
+  "timeline": [
+    { "tiles": "c==0", "marks": { "left": "n" }, "say": "n", "ms": 2200 },
+    { "tiles": "c==0||r==0", "marks": { "left": "n", "top": "m" }, "say": "m", "ms": 2200 },
+    { "tiles": "true", "marks": { "left": "n", "top": "m" }, "say": "n+\"×\"+m", "ms": 2400 },
+    { "tiles": "true", "count": true, "say": "n*m", "accent": true, "ms": 3200 }
+  ]
+}

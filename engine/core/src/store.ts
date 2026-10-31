@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { defaults, type Spec } from './spec';
+import { defaults, type Spec } from './spec.js';
 
 type State = {
   spec: Spec | null; vars: Record<string, number>; beat: number; playing: boolean;

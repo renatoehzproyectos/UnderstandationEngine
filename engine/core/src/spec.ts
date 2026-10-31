@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { evaluate } from './expr';
+import { evaluate } from './expr.js';
 
 /** Un "beat" es un instante de la experiencia: qué cuadritos se ven, qué medidas y qué se dice. */
 export const Beat = z.object({
