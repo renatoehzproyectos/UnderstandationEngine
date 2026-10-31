@@ -8,11 +8,11 @@ const SPEC = { type: 'object', description: 'The experience spec as a JSON objec
 
 export const TOOLS = [
   fn('example', 'Get another complete, valid example spec (the rectangle-area one is already in your instructions). ids: square-root, rectangle-area (2D grid), cube-area (3D cube).', obj({ id: { type: 'string' } }, ['id'])),
-  fn('calc', 'Exact arithmetic: numbers and + - * / % ( ) only. Use it to double-check every number you plan to show.', obj({ expression: { type: 'string' } }, ['expression'])),
-  fn('preview', 'Render a draft spec as text: every beat as an ASCII grid (# visible, . hidden) plus marks and symbols, using default variable values. LOOK at it before submitting.', obj({ spec: SPEC }, ['spec'])),
-  fn('check', 'Run the verifier on a draft spec: schema, expressions, symbols-only language, claims, and whether what is visible matches what is said/marked. Returns OK or the list of problems.', obj({ spec: SPEC }, ['spec'])),
-  fn('submit', 'Submit the FINAL spec. Only accepted if the verifier passes; otherwise the problems are returned so you can fix them.', obj({ spec: SPEC }, ['spec'])),
-  fn('cannot_represent', 'Use when the concept cannot be shown truthfully with a unit-square grid or a cube.', obj({ reason: { type: 'string' } }, ['reason'])),
+  fn('calc', 'Exact arithmetic.', obj({ expression: { type: 'string' } }, ['expression'])),
+  fn('preview', 'Show a draft as ASCII per beat (# visible, . hidden) with marks and symbols.', obj({ spec: SPEC }, ['spec'])),
+  fn('check', 'Verify a spec (schema, symbols-only, claims, visible tiles vs numbers shown). If it passes it is ACCEPTED and you are done; otherwise returns the problems.', obj({ spec: SPEC }, ['spec'])),
+  fn('submit', 'Same as check.', obj({ spec: SPEC }, ['spec'])),
+  fn('cannot_represent', 'The concept cannot be shown with a grid or a cube.', obj({ reason: { type: 'string' } }, ['reason'])),
 ];
 
 const asSpec = (v: unknown) => (typeof v === 'string' ? JSON.parse(v) : v);
@@ -41,7 +41,7 @@ export function runTool(name: string, args: any): ToolResult {
     if (name === 'calc') return { text: String(evaluate(String(args.expression), {})) };
     if (name === 'cannot_represent') return { text: '', unsupported: true };
     const r = inspect(asSpec(args.spec));
-    if (name === 'check') return { text: r.errors.length ? 'PROBLEMS:\n' + r.errors.join('\n') : 'OK' };
+    if (name === 'check') return r.errors.length || !r.spec ? { text: 'PROBLEMS:\n' + r.errors.join('\n') } : { text: 'OK', done: r.spec };
     if (name === 'preview') return { text: r.spec ? preview(r.spec) + (r.errors.length ? '\nPROBLEMS:\n' + r.errors.join('\n') : '') : 'PROBLEMS:\n' + r.errors.join('\n') };
     if (name === 'submit') return r.errors.length || !r.spec ? { text: 'REJECTED:\n' + r.errors.join('\n') } : { text: 'accepted', done: r.spec };
     return { text: `unknown tool ${name}` };

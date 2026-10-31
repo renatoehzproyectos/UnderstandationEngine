@@ -4,6 +4,7 @@ import { TOOLS, runTool } from './tools.js';
 
 const API = 'https://api.groq.com/openai/v1';
 const PREFER = ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'llama-3.1-8b-instant'];
+const sleep = (ms: number) => new Promise((x) => setTimeout(x, ms));
 const NOT_CHAT = /whisper|guard|tts|playai|orpheus|embed|safeguard|allam/i;
 
 async function listModels(key: string, first?: string): Promise<string[]> {
@@ -18,16 +19,25 @@ async function listModels(key: string, first?: string): Promise<string[]> {
     .sort((a, b) => (a === first ? -1 : b === first ? 1 : rank(a) - rank(b)));
 }
 
+const compact = (ms: any[]) => ms.map((m, i) => {
+  if (i < 2 || i >= ms.length - 4) return m; // conserva instrucciones y lo más reciente
+  if (m.role === 'tool') return { ...m, content: String(m.content).slice(0, 100) };
+  if (m.tool_calls) return { ...m, tool_calls: m.tool_calls.map((t: any) => ({ ...t, function: { ...t.function, arguments: t.function.arguments.length > 200 ? '{}' : t.function.arguments } })) };
+  return m;
+});
+
 async function chat(key: string, model: string, messages: any[]) {
   for (let attempt = 0; attempt < 2; attempt++) {
     const r = await fetch(`${API}/chat/completions`, {
       method: 'POST', signal: AbortSignal.timeout(20000),
       headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model, messages, tools: TOOLS, tool_choice: 'auto', temperature: 0.2, max_tokens: 2500 }),
+      body: JSON.stringify({ model, messages: compact(messages), tools: TOOLS, tool_choice: 'auto', temperature: 0.2, max_tokens: 2500 }),
     });
-    if (r.status === 429 && attempt === 0) { // límite de tasa: espera si es corto
-      const wait = Number(r.headers.get('retry-after')) || 0;
-      if (wait > 0 && wait <= 8) { await new Promise((x) => setTimeout(x, wait * 1000)); continue; }
+    if (r.status === 429) { // límite de tasa: espera si es corto; si no, avisa cuánto falta
+      const body = await r.text();
+      const wait = Number(r.headers.get('retry-after')) || Number(body.match(/try again in ([\d.]+)s/)?.[1]) || 20;
+      if (wait <= 6 && attempt === 0) { await sleep(wait * 1000); continue; }
+      throw new Error(`HTTP 429 RATE ${wait}s ${body.replace(/\s+/g, ' ').slice(0, 160)}`);
     }
     if (!r.ok) throw new Error(`HTTP ${r.status} ${(await r.text()).replace(/\s+/g, ' ').slice(0, 300)}`);
     return (await r.json()).choices?.[0]?.message ?? {};
@@ -72,16 +82,29 @@ async function agent(key: string, model: string, concept: string, deadline: numb
 }
 
 export async function generateSpec(concept: string, key: string, first?: string, trace: string[] = []): Promise<Spec> {
-  const models = await listModels(key, first), log: string[] = [], t0 = Date.now();
-  for (const model of models) {
-    if (Date.now() - t0 > 40000) break;
-    try { return await agent(key, model, concept, Math.min(t0 + 55000, Date.now() + 28000), trace); }
+  const models = await listModels(key, first), log: string[] = [], t0 = Date.now(), end = t0 + 55000;
+  const limited: { model: string; wait: number }[] = [];
+  const attempt = async (model: string, deadline: number) => {
+    try { return await agent(key, model, concept, deadline, trace); }
     catch (e) {
       const m = String(e);
       if (m.includes('unsupported')) throw new Error('unsupported');
-      log.push(`${model}: ${m.slice(0, 80)}`);
-      trace.push(`${model} FAILED: ${m.slice(0, 400)}`);
+      const w = m.match(/RATE ([\d.]+)s/);
+      if (w) limited.push({ model, wait: Number(w[1]) });
+      log.push(`${model}: ${m.slice(0, 80)}`); trace.push(`${model} FAILED: ${m.slice(0, 400)}`);
+      return null;
     }
+  };
+  for (const model of models) { // 1ª pasada: cada modelo tiene su propio cupo
+    if (Date.now() > end - 8000) break;
+    const r = await attempt(model, Math.min(end, Date.now() + 30000)); if (r) return r;
+  }
+  limited.sort((a, b) => a.wait - b.wait); // 2ª pasada: espera al que se libere antes
+  for (const { model, wait } of limited) {
+    if (Date.now() + wait * 1000 + 12000 > end) continue;
+    trace.push(`waiting ${wait}s for ${model} to free its rate limit`);
+    await sleep((wait + 1) * 1000);
+    const r = await attempt(model, end); if (r) return r;
   }
   throw new Error(`all models failed → ${log.join(' | ')}`);
 }

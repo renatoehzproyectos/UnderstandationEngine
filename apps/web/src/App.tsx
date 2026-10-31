@@ -11,7 +11,7 @@ export default function App() {
   const { spec, vars, beat, playing, setVar, go, play, pause } = useExperience();
   const [cnt, setCnt] = useState(0);
   const [items, setItems] = useState(LIBRARY.map((e) => ({ glyph: e.glyph, spec: e.spec })));
-  const [cp, setCp] = useState<'' | 'ok' | 'err'>(''), [ask, setAsk] = useState(false), [q, setQ] = useState(''), [st, setSt] = useState<'' | 'busy' | 'err' | 'no'>('');
+  const [cp, setCp] = useState<'' | 'ok' | 'err'>(''), [ask, setAsk] = useState(false), [q, setQ] = useState(''), [st, setSt] = useState<'' | 'busy' | 'err' | 'no' | 'rate'>('');
   const s = spec!, B = s.timeline[beat], last = s.timeline.length - 1;
   const base = { ...vars, c: 0, r: 0, i: 0, k: 0 };
   const cols = s.grid ? Number(evaluate(s.grid.cols, base)) : 0, rows = s.grid ? Number(evaluate(s.grid.rows, base)) : 0, total = cols * rows;
@@ -52,7 +52,7 @@ export default function App() {
       const sp = parseSpec(j.spec);
       log('gen', `spec accepted: ${sp.id}\n${JSON.stringify(sp)}`);
       setItems((it) => [...it, { glyph: '★', spec: sp }]); open(sp); setSt(''); setAsk(false); setQ('');
-    } catch (e) { log('error', `generate failed: ${String(e)}`); setSt('err'); }
+    } catch (e) { log('error', `generate failed: ${String(e)}`); setSt(String(e).includes('429') ? 'rate' : 'err'); }
   }
 
   const mark = (e?: string) => (e ? String(evaluate(e, base)) : undefined);
@@ -72,7 +72,7 @@ export default function App() {
       {ask && (
         <div className="ask">
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && generate()} placeholder="…" autoFocus />
-          <button aria-label="→" onClick={generate}>{st === 'busy' ? '⏳' : st === 'err' ? '⚠' : st === 'no' ? '∅' : '→'}</button>
+          <button aria-label="→" onClick={generate}>{st === 'busy' ? '⏳' : st === 'err' ? '⚠' : st === 'no' ? '∅' : st === 'rate' ? '⏱' : '→'}</button>
         </div>
       )}
       <section className="stage">
