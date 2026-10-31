@@ -9,7 +9,7 @@ export default function App() {
   const { spec, vars, beat, playing, setVar, go, play, pause } = useExperience();
   const [cnt, setCnt] = useState(0);
   const [items, setItems] = useState(LIBRARY.map((e) => ({ glyph: e.glyph, spec: e.spec })));
-  const [ask, setAsk] = useState(false), [q, setQ] = useState(''), [st, setSt] = useState<'' | 'busy' | 'err'>('');
+  const [ask, setAsk] = useState(false), [q, setQ] = useState(''), [st, setSt] = useState<'' | 'busy' | 'err' | 'no'>('');
   const s = spec!, B = s.timeline[beat], last = s.timeline.length - 1;
   const base = { ...vars, c: 0, r: 0, i: 0, k: 0 };
   const cols = Number(evaluate(s.grid.cols, base)), rows = Number(evaluate(s.grid.rows, base)), total = cols * rows;
@@ -34,6 +34,7 @@ export default function App() {
     setSt('busy');
     try {
       const r = await fetch('/api/generate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ concept: q }) });
+      if (r.status === 422 && (await r.json()).error?.includes('unsupported')) { setSt('no'); return; }
       if (!r.ok) throw new Error();
       const sp = parseSpec(await r.json());
       setItems((it) => [...it, { glyph: '★', spec: sp }]); open(sp); setSt(''); setAsk(false); setQ('');
@@ -56,7 +57,7 @@ export default function App() {
       {ask && (
         <div className="ask">
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && generate()} placeholder="…" autoFocus />
-          <button aria-label="→" onClick={generate}>{st === 'busy' ? '⏳' : st === 'err' ? '⚠' : '→'}</button>
+          <button aria-label="→" onClick={generate}>{st === 'busy' ? '⏳' : st === 'err' ? '⚠' : st === 'no' ? '∅' : '→'}</button>
         </div>
       )}
       <section className="stage">
